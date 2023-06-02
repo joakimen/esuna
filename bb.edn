@@ -1,0 +1,3 @@
+{:paths ["src"]
+ :deps {org.joakimen/esuna {:local/root "."}}
+ :bbin/bin {esu {:main-opts ["-m" "esuna.cli"]}}}
