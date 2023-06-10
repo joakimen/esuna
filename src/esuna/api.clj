@@ -5,8 +5,7 @@
             [esuna.env :refer [env]]
             [esuna.lib.aws.sqs :as sqs]
             [esuna.lib.git :as git]
-            ;;[doric.core :as doric]
-            ))
+            [doric.core :as doric]))
 
 
 (defn clone-repos [_]
@@ -24,8 +23,10 @@
         (run! #(println "-" %) successful-clones)))))
 
 (defn list-dlq-messages [_]
-  (let [queues (sqs/list-dead-letter-queues)]
-    ;; TODO: extract interesting keys and print table using doric
-    (run! #(println (:QueueUrl %) "-" (-> % :Attributes :ApproximateNumberOfMessages)) queues)
-    ;;(doric/table [:QueueUrl :visible :invisible] queues)
-    ))
+  (->> (sqs/list-dead-letter-queues)
+       (map #(assoc {} :DLQ (:QueueUrl %)
+                    :Messages (-> %  :Attributes :ApproximateNumberOfMessages)))
+       (sort-by :DLQ)
+       (doric/table [:DLQ :Messages])
+       (doall)
+       (println)))
