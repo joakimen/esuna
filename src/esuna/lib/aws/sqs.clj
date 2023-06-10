@@ -2,37 +2,37 @@
   (:require [com.grzm.awyeah.client.api :as aws]
             [clojure.walk :refer [keywordize-keys]]))
 
-(def sqs (aws/client {:api :sqs}))
+(defn create-client []
+  (aws/client {:api :sqs}))
 
-(defn invoke [m]
-  (aws/invoke sqs m))
-
-(defn- get-queue-attributes [queue-url]
-  (-> (invoke {:op :GetQueueAttributes
-               :request {:QueueUrl queue-url :AttributeNames ["All"]}})
+(defn- get-queue-attributes [client queue-url]
+  (-> (aws/invoke client {:op :GetQueueAttributes
+                          :request {:QueueUrl queue-url :AttributeNames ["All"]}})
       :Attributes
       keywordize-keys))
 
-(defn- list-queues []
-  (:QueueUrls (invoke {:op :ListQueues})))
+(defn- list-queues [client]
+  (:QueueUrls (aws/invoke client {:op :ListQueues})))
 
-(defn- list-dlq []
-  (->> (list-queues)
+(defn- list-dlq [client]
+  (->> (list-queues client)
        (filter #(re-matches #".*-dlq$" %))))
 
-(defn- enrich-queue [queue-url]
+(defn- enrich-queue [client queue-url]
   {:QueueUrl queue-url
-   :Attributes (get-queue-attributes queue-url)})
+   :Attributes (get-queue-attributes client queue-url)})
 
 (defn list-dead-letter-queues []
-  (->> (list-dlq)
-       (pmap enrich-queue)
-       (doall)))
+  (let [sqs (create-client)]
+    (->> (list-dlq sqs)
+         (pmap #(enrich-queue sqs %))
+         (doall))))
 
 (comment
 
+  (def sqs (create-client))
   (aws/validate-requests sqs true)
-  (def queues (list-queues))
+  (def queues (list-queues sqs))
   (def dlq (list-dead-letter-queues))
 
   (-> (aws/ops sqs))
