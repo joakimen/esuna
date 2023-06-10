@@ -3,11 +3,15 @@
   (:require [babashka.fs :as fs]
             [clojure.string :as str]
             [esuna.env :refer [env]]
-            [esuna.lib.git :as git]))
+            [esuna.lib.aws.sqs :as sqs]
+            [esuna.lib.git :as git]
+            ;;[doric.core :as doric]
+            ))
+
 
 (defn clone-repos [_]
   (println "cloning repos ...")
-  (let [orgs (:git-repos env)
+  (let [orgs (:git-orgs env)
         repos (->> orgs
                    (pmap git/list-repos) doall flatten)]
     (println "found" (count repos) "repo(s) for orgs:" (str/join ", " orgs))
@@ -18,3 +22,10 @@
       (when-not (empty? successful-clones)
         (println "cloned" (count successful-clones) "new repos(s):")
         (run! #(println "-" %) successful-clones)))))
+
+(defn list-dlq-messages [_]
+  (let [queues (sqs/list-dead-letter-queues)]
+    ;; TODO: extract interesting keys and print table using doric
+    (run! #(println (:QueueUrl %) "-" (-> % :Attributes :ApproximateNumberOfMessages)) queues)
+    ;;(doric/table [:QueueUrl :visible :invisible] queues)
+    ))
