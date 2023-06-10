@@ -12,7 +12,7 @@
   (println "cloning repos ...")
   (let [orgs (:git-orgs env)
         repos (->> orgs
-                   (pmap git/list-repos) doall flatten)]
+                   (pmap git/list-remote-repos) doall flatten)]
     (println "found" (count repos) "repo(s) for orgs:" (str/join ", " orgs))
     (let [clone-results (->> repos (pmap #(git/clone (fs/expand-home (:git-root env)) %)) doall)
           successful-clones (->> clone-results

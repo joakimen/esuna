@@ -6,7 +6,7 @@
 (defn ->edn [s]
   (json/parse-string s true))
 
-(defn list-repos [org]
+(defn list-remote-repos [org]
   (->> (run "gh" "repo" "list" org
             "--json" "nameWithOwner"
             "--limit" "10000"
