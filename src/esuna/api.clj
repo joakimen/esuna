@@ -1,11 +1,12 @@
 (ns esuna.api
   "core functionality of the project"
   (:require [babashka.fs :as fs]
+            [babashka.process :as p]
             [clojure.string :as str]
+            [doric.core :as doric]
             [esuna.env :refer [env]]
             [esuna.lib.aws.sqs :as sqs]
-            [esuna.lib.git :as git]
-            [doric.core :as doric]))
+            [esuna.lib.git :as git]))
 
 
 (defn clone-repos [_]
@@ -30,3 +31,14 @@
        (doric/table [:DLQ :Messages])
        (doall)
        (println)))
+
+
+(defn list-repo-status [_]
+  (let [dirty-repos (->> (git/list-local-repos)
+                         (pmap #(assoc {} :repo % :status (git/status %)))
+                         (filter #(seq (:status %)))
+                         (doall))]
+    (doseq [repo dirty-repos]
+      (println)
+      (p/shell "gum" "style" (:repo repo) "--bold" "--underline")
+      (println (:status repo)))))

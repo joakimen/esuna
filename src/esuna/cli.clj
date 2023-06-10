@@ -22,6 +22,7 @@ Subcommands:
     (println cmds)))
 
 (def table [{:cmds ["repo" "clone"] :fn api/clone-repos}
+            {:cmds ["repo" "status"] :fn api/list-repo-status}
             {:cmds ["dlq" "list"] :fn api/list-dlq-messages}
             {:cmds [] :fn (fn [_] (print-help table))}])
 
