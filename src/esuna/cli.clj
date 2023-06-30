@@ -15,15 +15,17 @@
 
 (defn- print-help [m]
   (let [cmds (str/join "\n" (format-commands-for-print m))]
-    (println "Usage: esu [cmd] ([sub-cmd])
-
-Subcommands:
+    (println "Usage: esu <command>
  ")
     (println cmds)))
 
 (def table [{:cmds ["repo" "clone"] :fn api/clone-repos}
             {:cmds ["repo" "status"] :fn api/list-repo-status}
+            {:cmds ["repo" "pull"] :fn api/pull-repos}
+            {:cmds ["build"] :fn api/build-project}
             {:cmds ["dlq" "list"] :fn api/list-dlq-messages}
+            {:cmds ["todo" "list"] :fn api/list-todos}
+            {:cmds ["jira" "issue"] :fn api/list-jira-issues}
             {:cmds [] :fn (fn [_] (print-help table))}])
 
 (defn -main [& args]
